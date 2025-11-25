@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Comentarios - Recomendaciones de Juegos</title>
+  <style>
+    :root{
+      --bg:#0f1724; /* dark navy */
+      --card:#0b1220;
+      --muted:#9aa7bf;
+      --accent:#7c3aed; /* purple */
+      --neon:#00e6a8;
+      --glass: rgba(255,255,255,0.04);
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,var(--bg),#071028);color:#e6eef8;line-height:1.45}
+    .container{max-width:920px;margin:28px auto;padding:24px}
+    .header{display:flex;gap:16px;align-items:center}
+    .logo{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#06b6d4);display:flex;align-items:center;justify-content:center;font-weight:700;color:#021124}
+    h1{margin:0;font-size:1.5rem}
+    p.lead{color:var(--muted);margin-top:6px}
+
+    .card{background:linear-gradient(180deg,var(--card),rgba(8,12,20,0.6));border-radius:12px;padding:18px;margin-top:18px;box-shadow:0 6px 18px rgba(3,6,12,0.6)}
+
+    form.grid{display:grid;grid-template-columns:1fr 160px;gap:12px}
+    label{display:block;font-size:0.85rem;color:var(--muted);margin-bottom:6px}
+    input[type=text], textarea, select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:var(--glass);color:inherit;resize:vertical}
+    textarea{min-height:90px}
+    .full{grid-column:1 / -1}
+
+    .row{display:flex;gap:10px;align-items:center}
+    button{background:linear-gradient(90deg,var(--neon),var(--accent));border:none;color:#021124;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer}
+    button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);padding:8px 12px}
+
+    .comments{margin-top:18px}
+    .comment{padding:14px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);border:1px solid rgba(255,255,255,0.03);margin-bottom:12px}
+    .meta{display:flex;justify-content:space-between;gap:12px;align-items:center}
+    .meta .left{display:flex;gap:12px;align-items:center}
+    .avatar{width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,#ffd166,#ef476f);display:flex;align-items:center;justify-content:center;font-weight:800;color:#08121a}
+    .name{font-weight:700}
+    .time{font-size:0.85rem;color:var(--muted)}
+    .game-tag{background:rgba(255,255,255,0.03);padding:6px 8px;border-radius:8px;font-size:0.85rem;color:var(--muted);border:1px solid rgba(255,255,255,0.02)}
+    .text{margin-top:10px;color:#dbe9ff}
+
+    .empty{color:var(--muted);padding:18px;text-align:center}
+
+    .controls{display:flex;gap:8px}
+    .small{font-size:0.85rem;padding:6px 8px}
+
+    /* responsive */
+    @media (max-width:720px){
+      form.grid{grid-template-columns:1fr}
+      .header{gap:10px}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">VG</div>
+      <div>
+        <h1>Comentarios y Recomendaciones</h1>
+        <p class="lead">Deja tu recomendación, explica por qué lo recomiendas y comparte descubrimientos con la comunidad.</p>
+      </div>
+    </div>
+
+    <div class="card" aria-live="polite">
+      <form id="commentForm" class="grid" onsubmit="return false;">
+        <div>
+          <label for="name">Nombre</label>
+          <input id="name" type="text" maxlength="40" placeholder="Tu nombre o nick" required />
+        </div>
+        <div>
+          <label for="game">Juego (recomendado)</label>
+          <input id="game" type="text" maxlength="60" placeholder="Ej: Hollow Knight" required />
+        </div>
+        <div class="full">
+          <label for="text">Comentario / Argumento (cuéntanos por qué lo recomiendas)</label>
+          <textarea id="text" maxlength="1000" placeholder="Hazlo personal: qué te gustó, por qué lo recomiendas, para quién va dirigido..." required></textarea>
+        </div>
+
+        <div class="row full" style="justify-content:space-between;align-items:center;margin-top:6px">
+          <div style="display:flex;gap:8px;align-items:center">
+            <button id="submit">Publicar</button>
+            <button type="button" class="ghost" id="clear">Borrar campos</button>
+          </div>
+          <div class="row" style="gap:10px;align-items:center">
+            <label for="sort" style="margin:0;color:var(--muted);font-size:0.9rem">Ordenar:</label>
+            <select id="sort" aria-label="Ordenar comentarios">
+              <option value="newest">Más recientes</option>
+              <option value="oldest">Más antiguos</option>
+            </select>
+          </div>
+        </div>
+      </form>
+
+      <div id="status" style="margin-top:12px;color:var(--muted);font-size:0.95rem"></div>
+    </div>
+
+    <div id="commentsWrap" class="card comments">
+      <div id="empty" class="empty">No hay recomendaciones todavía. Sé el primero en compartir una joya.</div>
+      <div id="list"></div>
+    </div>
+
+    <div style="margin-top:12px;color:var(--muted);font-size:0.9rem">Nota: los comentarios se guardan en tu navegador (localStorage). Para que otros los vean en tu web, hospeda este archivo en un servidor o usa un servicio como GitHub Pages / Netlify y luego añade la URL en Google Sites mediante un iframe.</div>
+  </div>
+
+  <script>
+    // --- helpers ---
+    function escapeHtml(s){
+      return s
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'","&#39;");
+    }
+
+    function timeStamp(){
+      return new Date().toISOString();
+    }
+
+    function niceDate(iso){
+      const d = new Date(iso);
+      return d.toLocaleString();
+    }
+
+    // --- storage ---
+    const STORAGE_KEY = 'vg_recommendations_v1';
+    function load(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      }catch(e){return []}
+    }
+    function save(arr){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+    }
+
+    // --- UI ---
+    const listEl = document.getElementById('list');
+    const emptyEl = document.getElementById('empty');
+    const status = document.getElementById('status');
+
+    function render(){
+      const arr = load();
+      const sort = document.getElementById('sort').value;
+      const items = arr.slice();
+      if(sort==='newest') items.sort((a,b)=> b.ts.localeCompare(a.ts)); else items.sort((a,b)=> a.ts.localeCompare(b.ts));
+
+      listEl.innerHTML='';
+      if(items.length===0){ emptyEl.style.display='block'; return; } else { emptyEl.style.display='none'; }
+
+      for(const it of items){
+        const div = document.createElement('div'); div.className='comment';
+        const avatarText = (it.name||'U').slice(0,2).toUpperCase();
+        div.innerHTML = `
+          <div class="meta">
+            <div class="left">
+              <div class="avatar">${escapeHtml(avatarText)}</div>
+              <div>
+                <div class="name">${escapeHtml(it.name)}</div>
+                <div class="time">${niceDate(it.ts)}</div>
+              </div>
+            </div>
+            <div class="controls">
+              <div class="game-tag">${escapeHtml(it.game)}</div>
+              <button class="small ghost" data-id="${it.id}" aria-label="Eliminar comentario">Eliminar</button>
+            </div>
+          </div>
+          <div class="text">${escapeHtml(it.text).replace(/\n/g,'<br>')}</div>
+        `;
+        listEl.appendChild(div);
+      }
+
+      // attach delete handlers
+      listEl.querySelectorAll('button[data-id]').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+          const id = btn.getAttribute('data-id');
+          if(!confirm('¿Eliminar este comentario?')) return;
+          const cur = load().filter(x=> x.id!==id);
+          save(cur);
+          render();
+        });
+      });
+    }
+
+    // --- form ---
+    document.getElementById('submit').addEventListener('click',()=>{
+      const name = document.getElementById('name').value.trim();
+      const game = document.getElementById('game').value.trim();
+      const text = document.getElementById('text').value.trim();
+      if(!name || !game || !text){
+        status.textContent = 'Rellena todos los campos antes de publicar.'; return;
+      }
+      status.textContent = '';
+      const arr = load();
+      const item = { id: cryptoRandomId(), name, game, text, ts: timeStamp() };
+      arr.push(item); save(arr); clearForm(); render();
+      // focus feedback
+      status.textContent = '¡Comentario publicado!';
+      setTimeout(()=> status.textContent = '',2500);
+    });
+
+    document.getElementById('clear').addEventListener('click',clearForm);
+    document.getElementById('sort').addEventListener('change',render);
+
+    function clearForm(){
+      document.getElementById('name').value='';
+      document.getElementById('game').value='';
+      document.getElementById('text').value='';
+      document.getElementById('name').focus();
+    }
+
+    function cryptoRandomId(){
+      try{
+        return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>
+          (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+        );
+      }catch(e){
+        return 'id'+Math.random().toString(36).slice(2,9);
+      }
+    }
+
+    // init
+    render();
+  </script>
+</body>
+</html>
